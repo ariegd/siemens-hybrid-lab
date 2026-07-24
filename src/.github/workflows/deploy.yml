@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  build-and-push-fog:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout del código
@@ -22,4 +22,6 @@ jobs:
       with:
         context: ./fog-processor
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:${{ github.sha }}
