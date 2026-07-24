@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # El "Broker" que recibe los datos de los sensores (Protocolo MQTT)
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: factory_mqtt_broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+    networks:
+      - ot-network
+
+  # El "Gemelo Digital" / Ingestor en Python (Capa Fog)
+  fog-processor:
+    image: ${DOCKER_REGISTRY_USER}/fog-processor:latest
+    container_name: factory_fog_processor
+    depends_on:
+      - mqtt-broker
+    environment:
+      - MQTT_HOST=mqtt-broker
+      - CLOUD_API_URL=http://<IP_DE_TU_VM_EN_GCP>:5000/predict
+    networks:
+      - ot-network
+
+networks:
+  ot-network:
+    driver: bridge
+
+volumes:
+  mosquitto_data:

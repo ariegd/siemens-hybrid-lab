@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Broker MQTT de campo (Capa Edge/Fog)
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: factory_mqtt_broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+    networks:
+      - factory-network
+
+  # Procesador Analítico Local (Capa Fog)
+  fog-processor:
+    build: ./fog-processor
+    container_name: factory_fog_processor
+    depends_on:
+      - mqtt-broker
+    environment:
+      - MQTT_HOST=mqtt-broker
+    networks:
+      - factory-network
+
+networks:
+  factory-network:
+    driver: bridge
+
+volumes:
+  mosquitto_data:
