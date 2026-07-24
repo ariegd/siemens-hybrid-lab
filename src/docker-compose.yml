@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Broker MQTT de campo (Capa Edge/Fog)
   mqtt-broker:
@@ -14,12 +12,13 @@ services:
 
   # Procesador Analítico Local (Capa Fog)
   fog-processor:
-    build: ./fog-processor
+    image: TU_USUARIO_DOCKERHUB/fog-processor:latest
     container_name: factory_fog_processor
     depends_on:
       - mqtt-broker
     environment:
       - MQTT_HOST=mqtt-broker
+      - CLOUD_API_URL=http://34.175.14.105:8000/predict
     networks:
       - factory-network
 
