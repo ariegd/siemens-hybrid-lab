@@ -22,21 +22,26 @@ docker compose ps
 # Acceso por ssh a la mv en google cloud
 gcloud compute ssh siemens-cloud-ai --zone=europe-southwest1-a
 
-# Ver peticiones entrantes a la IA en tiempo real
-tail -f server.log
+# En la VM de GCP (~/cloud-api)
+docker compose pull
+docker compose up -d
+
+# Ver
+docker logs -f factory_cloud_ai
 ```
 salida
 ```
-91.230.168.251 - - [25/Jul/2026 06:09:25] "GET / HTTP/1.1" 404 -
-195.184.76.164 - - [25/Jul/2026 06:11:10] "GET /favicon.ico HTTP/1.1" 404 -
-65.49.1.162 - - [25/Jul/2026 06:41:45] "GET / HTTP/1.1" 404 -
-65.49.1.164 - - [25/Jul/2026 06:43:04] "GET /favicon.ico HTTP/1.1" 404 -
-65.49.1.166 - - [25/Jul/2026 06:43:26] "GET http://api.ipify.org/?format=json HTTP/1.1" 404 -
-65.49.1.171 - - [25/Jul/2026 06:43:33] "CONNECT www.shadowserver.org:443 HTTP/1.1" 404 -
-83.32.39.126 - - [25/Jul/2026 09:32:03] "POST /predict HTTP/1.1" 200 -
-83.32.39.126 - - [25/Jul/2026 09:32:05] "POST /predict HTTP/1.1" 200 -
-83.32.39.126 - - [25/Jul/2026 09:32:07] "POST /predict HTTP/1.1" 200 -
-83.32.39.126 - - [25/Jul/2026 09:32:09] "POST /predict HTTP/1.1" 200 -
+zodd@siemens-cloud-ai:~/cloud-api$ docker logs -f factory_cloud_ai
+[2026-07-25 12:45:45 +0000] [1] [INFO] Starting gunicorn 26.0.0
+[2026-07-25 12:45:45 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+[2026-07-25 12:45:45 +0000] [1] [INFO] Using worker: sync
+[2026-07-25 12:45:45 +0000] [6] [INFO] Booting worker with pid: 6
+[2026-07-25 12:45:45 +0000] [7] [INFO] Booting worker with pid: 7
+[2026-07-25 12:45:45 +0000] [1] [INFO] Control socket listening at /root/.gunicorn/gunicorn.ctl
+[2026-07-25 13:15:48 +0000] [1] [INFO] Handling signal: term
+[2026-07-25 13:15:48 +0000] [7] [INFO] Worker exiting (pid: 7)
+[2026-07-25 13:15:48 +0000] [6] [INFO] Worker exiting (pid: 6)
+[2026-07-25 13:15:52 +0000] [1] [INFO] Shutting down: Master
 ```
 5. Terminal 2: Capa Fog (Procesador Industrial Local)
 ```
@@ -80,5 +85,16 @@ Salida
 [Edge] Telemetría enviada: Vb: 4.96G | Temp: 68.11°C
 [Edge] Telemetría enviada: Vb: 1.31G | Temp: 64.64°C
 [Edge] Telemetría enviada: Vb: 2.76G | Temp: 54.95°C
+```
+7. En GitHub Actions
+```
+[1. Git Push] ──► [2. GitHub Actions: Build & Push] ──► [3. Docker Hub]
+                                                                                     │
+                         ┌───────────────────────────────────┴───────────────────────────────────┐
+                         ▼                                                                                                                      ▼
+      [4a. GitHub Actions: SSH a GCP]                                                                                                                       [4b. Watchtower en tu PC Local]
+                         │                                                                                                                      │
+                         ▼                                                                                                                      ▼
+    [Pull & Restart `factory_cloud_ai`]                                                                                                             [Pull & Restart `factory_fog_processor`]
 ```
 
