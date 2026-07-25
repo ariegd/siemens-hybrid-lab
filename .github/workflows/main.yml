@@ -1,13 +1,15 @@
-name: CI/CD Industrial Automation
+name: CI/CD Industrial Hybrid Architecture
 
 on:
   push:
     branches: [ "main", "master" ]
-  release:
-    types: [ published ]
+  workflow_dispatch:
 
 jobs:
-  build-and-push-fog:
+  # ==========================================
+  # JOB 1: Continuous Integration (CI)
+  # ==========================================
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout del código
@@ -19,11 +21,43 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Compilar y subir imagen del procesador Fog
+    - name: Compilar y subir imagen del Procesador Fog
       uses: docker/build-push-action@v5
       with:
-        context: ./src/fog-processor   # Asegúrate de que esta sea la ruta correcta a la carpeta fog-processor
+        context: ./src/fog-processor
         push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:${{ github.sha }}
+
+    - name: Compilar y subir imagen de la IA Cloud
+      uses: docker/build-push-action@v5
+      with:
+        context: ./capa_cloud  # Ajusta esta ruta si la carpeta de la API se llama distinto
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/cloud-ai:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/cloud-ai:${{ github.sha }}
+
+  # ==========================================
+  # JOB 2: Continuous Deployment (CD) - GCP
+  # ==========================================
+  deploy-cloud:
+    needs: build-and-push  # Solo se ejecuta si la compilación y subida fue exitosa
+    runs-on: ubuntu-latest
+    steps:
+    - name: Desplegar en la VM de Google Cloud vía SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.GCP_HOST }}
+        username: ${{ secrets.GCP_USERNAME }}
+        key: ${{ secrets.GCP_SSH_KEY }}
+        script: |
+          echo "Conectado a GCP VM. Iniciando Despliegue Continuo..."
+          cd ~/cloud-api || exit 1
+          docker compose pull
+          docker compose up -d --remove-orphans
+          echo "Despliegue en GCP completado con éxito."
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:${{ github.sha }}
