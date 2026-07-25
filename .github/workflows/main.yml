@@ -1,30 +1,27 @@
-services:
-  # Broker MQTT de campo (Capa Edge/Fog)
-  mqtt-broker:
-    image: eclipse-mosquitto:latest
-    container_name: factory_mqtt_broker
-    ports:
-      - "1883:1883"
-    volumes:
-      - mosquitto_data:/mosquitto/data
-    networks:
-      - factory-network
+name: CI/CD Industrial Automation
 
-  # Procesador Analítico Local (Capa Fog)
-  fog-processor:
-    image: TU_USUARIO_DOCKERHUB/fog-processor:latest
-    container_name: factory_fog_processor
-    depends_on:
-      - mqtt-broker
-    environment:
-      - MQTT_HOST=mqtt-broker
-      - CLOUD_API_URL=http://34.175.14.105:8000/predict
-    networks:
-      - factory-network
+on:
+  push:
+    branches: [ "main", "master" ]
 
-networks:
-  factory-network:
-    driver: bridge
+jobs:
+  build-and-push-fog:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4
 
-volumes:
-  mosquitto_data:
+    - name: Iniciar sesión en Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Compilar y subir imagen del procesador Fog
+      uses: docker/build-push-action@v5
+      with:
+        context: ./fog-processor   # Asegúrate de que esta sea la ruta correcta a la carpeta fog-processor
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:${{ github.sha }}
