@@ -22,6 +22,18 @@ services:
     networks:
       - factory-network
 
+  # Gestor de Actualizaciones Automáticas en Planta
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: factory_watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Revisa cada 30 segundos si hay nuevas imágenes y elimina las viejas (--cleanup)
+    command: --interval 30 --cleanup fog-processor
+    restart: always
+    networks:
+      - factory-network
+
 networks:
   factory-network:
     driver: bridge
