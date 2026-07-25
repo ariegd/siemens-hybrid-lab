@@ -3,6 +3,8 @@ name: CI/CD Industrial Automation
 on:
   push:
     branches: [ "main", "master" ]
+  release:
+    types: [ published ]
 
 jobs:
   build-and-push-fog:
@@ -25,3 +27,4 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:${{ github.sha }}
+          ${{ github.event.release.tag_name && format('{0}/fog-processor:{1}', secrets.DOCKERHUB_USERNAME, github.event.release.tag_name) || '' }}
