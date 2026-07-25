@@ -12,7 +12,7 @@ services:
 
   # Procesador Analítico Local (Capa Fog)
   fog-processor:
-    image: TU_USUARIO_DOCKERHUB/fog-processor:latest
+    image: ariegd/fog-processor:latest
     container_name: factory_fog_processor
     depends_on:
       - mqtt-broker
