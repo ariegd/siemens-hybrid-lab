@@ -20,7 +20,7 @@ jobs:
     - name: Compilar y subir imagen del procesador Fog
       uses: docker/build-push-action@v5
       with:
-        context: ./fog-processor   # Asegúrate de que esta sea la ruta correcta a la carpeta fog-processor
+        context: ./src/fog-processor   # Asegúrate de que esta sea la ruta correcta a la carpeta fog-processor
         push: true
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
