@@ -33,7 +33,7 @@ jobs:
     - name: Compilar y subir imagen de la IA Cloud
       uses: docker/build-push-action@v5
       with:
-        context: ./capa_cloud  # Ajusta esta ruta si la carpeta de la API se llama distinto
+        context: ./src/capa_cloud  # Ajusta esta ruta si la carpeta de la API se llama distinto
         push: true
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/cloud-ai:latest
