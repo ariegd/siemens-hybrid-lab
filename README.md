@@ -75,7 +75,7 @@ El proyecto integra un pipeline automatizado con GitHub Actions, Docker Hub y Wa
 ## Puesta en Marcha (Entorno Híbrido Completo)
 Para ejecutar y monitorizar la arquitectura distribuida, trabaja con 3 terminales abiertas en paralelo:
 
-**Terminal 1: Capa Cloud (VM en Google Cloud)**
+### Terminal 1: Capa Cloud (VM en Google Cloud)
 ```Bash
 # Acceso vía SSH a la VM en GCP
 gcloud compute ssh siemens-cloud-ai --zone=europe-southwest1-a
@@ -88,7 +88,7 @@ docker compose pull && docker compose up -d
 docker logs -f factory_cloud_ai
 ```
 
-**Terminal 2: Capa Fog (Procesador Industrial Local)**
+### Terminal 2: Capa Fog (Procesador Industrial Local)
 ```Bash
 cd src/
 docker compose pull && docker compose up -d
@@ -100,7 +100,7 @@ docker logs -f factory_fog_processor
 docker logs -f factory_watchtower
 ```
 
-**Terminal 3: Capa Edge (Simulador de Telemetría OT)**
+### Terminal 3: Capa Edge (Simulador de Telemetría OT)
 ```Bash
 cd src/capa_edge
 python3 simulador_edge.py
