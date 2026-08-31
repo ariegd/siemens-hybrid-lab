@@ -31,10 +31,10 @@ Réplica exacta de la jerarquía industrial Edge-Fog-Cloud del ecosistema Siemen
 ---
 
 ## Tabla de Contenidos
-- [Arquitectura del Sistema](#-arquitectura-del-sistema)
-- [Estructura del Repositorio](#-estructura-del-repositorio)
-- [Flujo CI/CD y Despliegue Continuo](#-flujo-cicd-y-respliegue-continuo)
-- [Puesta en Marcha (Entorno Híbrido Completo)](#-puesta-en-marcha-entorno-híbrido-completo)
+- [Arquitectura del Sistema](#arquitectura-del-sistema)
+- [Estructura del Repositorio](#estructura-del-repositorio)
+- [Flujo CI/CD y Despliegue Continuo](#flujo-cicd-y-despliegue-continuo)
+- [Puesta en Marcha (Entorno Híbrido Completo)](#puesta-en-marcha-entorno-híbrido-completo)
   - [Terminal 1: Capa Cloud (VM en Google Cloud)](#terminal-1-capa-cloud-vm-en-google-cloud)
   - [Terminal 2: Capa Fog (Procesador Industrial Local)](#terminal-2-capa-fog-procesador-industrial-local)
   - [Terminal 3: Capa Edge (Simulador de Telemetría OT)](#terminal-3-capa-edge-simulador-de-telemetría-ot)
@@ -44,8 +44,8 @@ Réplica exacta de la jerarquía industrial Edge-Fog-Cloud del ecosistema Siemen
 ## Arquitectura del Sistema
 ```text
 [ Capa Edge ] ──(MQTT)──► [ Capa Fog ] ──(HTTP)──► [ Capa Cloud ]
- Simulador OT                       Broker + Processor                   IA Inferencia
- (Robotic Arm)                        (Watchtower CD)                 (GCP VM / Gunicorn)
+ Simulador OT     Broker + Processor       IA Inferencia
+ (Robotic Arm)     (Watchtower CD)      (GCP VM / Gunicorn)
 ```
 ---
 
@@ -63,11 +63,11 @@ El proyecto integra un pipeline automatizado con GitHub Actions, Docker Hub y Wa
 [1. Git Push] ──► [2. GitHub Actions: Build & Push] ──► [3. Docker Hub]
                                                                           │
                                          ┌───────────────────┴────────────────────┐
-                                        ▼                                                                   ▼
-                          [4a. GitHub Actions: SSH a GCP]                                                       [4b. Watchtower en PC Local]
-                                     │                                                                         │
-                                     ▼                                                                        ▼
-                         [Pull & Restart `factory_cloud_ai`]                                         [Pull & Restart `factory_fog_processor`]
+                                        ▼                                        ▼
+                          [4a. GitHub Actions: SSH a GCP]         [4b. Watchtower en PC Local]
+                                     │                                           │
+                                     ▼                                          ▼
+                         [Pull & Restart `factory_cloud_ai`]  [Pull & Restart `factory_fog_processor`]
 ```
 
 ---
