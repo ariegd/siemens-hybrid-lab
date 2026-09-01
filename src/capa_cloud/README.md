@@ -6,12 +6,13 @@ Servidor de inferencia para detección de anomalías en vibración y temperatura
 
 ## Tabla de Contenidos
 - [1. Aprovisionamiento de Infraestructura en GCP](#1-aprovisionamiento-de-infraestructura-en-gcp)
-- [2. Transferencia de Código (Local -> GCP VM)](#2-transferencia-de-código-local---gcp-vm)
-- [3. Preparación del Entorno Docker en la VM](#3-preparación-del-entorno-docker-en-la-vm)
-- [4. Estructura de Archivos en ~/cloud-api](#4-estructura-de-archivos-en-cloud-api)
-- [5. Despliegue y Operación de la API Cloud](#5-despliegue-y-operación-de-la-api-cloud)
-- [6. Verificación de Inferencia y Túnel SSH](#6-verificación-de-inferencia-y-túnel-ssh)
-- [7. Sincronización con la Capa Fog (Local)](#7-sincronización-con-la-capa-fog-local)
+- [2. Configuración de Seguridad y Secrets en GitHub Actions](#2-configuración-de-seguridad-y-secrets-en-github-actions)
+- [3. Transferencia de Código (Local -> GCP VM)](#3-transferencia-de-código-local---gcp-vm)
+- [4. Preparación del Entorno Docker en la VM](#4-preparación-del-entorno-docker-en-la-vm)
+- [5. Estructura de Archivos en ~/cloud-api](#5-estructura-de-archivos-en-cloud-api)
+- [6. Despliegue y Operación de la API Cloud](#6-despliegue-y-operación-de-la-api-cloud)
+- [7. Verificación de Inferencia y Túnel SSH](#7-verificación-de-inferencia-y-túnel-ssh)
+- [8. Sincronización con la Capa Fog (Local)](#8-sincronización-con-la-capa-fog-local)
 
 ---
 
@@ -23,7 +24,7 @@ Servidor de inferencia para detección de anomalías en vibración y temperatura
 gcloud auth login
 gcloud config set project TU_PROJECT_ID_REAL
 
-# 2. Crear regla de firewall para abrir el puerto 8000
+# 2. Crear regla de firewall para abrir el puerto 8000 (API de Inferencia)
 gcloud compute firewall-rules create allow-ai-api-8000 \
     --direction=INGRESS \
     --priority=1000 \
@@ -34,7 +35,18 @@ gcloud compute firewall-rules create allow-ai-api-8000 \
     --target-tags=api-server \
     --description="Permitir acceso a la API de IA en puerto 8000"
 
-# 3. Crear la Máquina Virtual en Madrid (europe-southwest1-a)
+# 3. Crear regla de firewall para abrir el puerto 22 (SSH / Despliegue Continuo CD)
+gcloud compute firewall-rules create allow-ssh-22 \
+    --direction=INGRESS \
+    --priority=1000 \
+    --network=default \
+    --action=ALLOW \
+    --rules=tcp:22 \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=api-server \
+    --description="Permitir acceso SSH desde GitHub Actions"
+
+# 4. Crear la Máquina Virtual en Madrid (europe-southwest1-a)
 gcloud compute instances create siemens-cloud-ai \
     --zone=europe-southwest1-a \
     --machine-type=e2-medium \
@@ -46,7 +58,29 @@ gcloud compute instances create siemens-cloud-ai \
 
 ---
 
-## 2. Transferencia de Código (Local -> GCP VM)
+## 2. Configuración de Seguridad y Secrets en GitHub Actions
+Al recrear la Máquina Virtual en GCP, es indispensable vincular la clave de autenticación y actualizar las variables del pipeline:
+
+1. Autorizar la Clave Pública SSH en la nueva VM:
+```bash
+gcloud compute ssh zodd@siemens-cloud-ai --zone=europe-southwest1-a
+
+mkdir -p ~/.ssh
+echo "<CONTENIDO_DE_GCP_DEPLOY_KEY.PUB>" >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+2. Actualizar Repository Secrets en GitHub:
+Accede a **Settings --> Secrets and variables --> Actions** en tu repositorio y actualiza las siguientes variables:
+
+* `GCP_HOST`: Dirección IP pública externa actual de la VM (obtenida con gcloud compute instances list).
+* `GCP_SSH_KEY`: Clave privada SSH completa (`~/.ssh/gcp_deploy_key`), incluyendo cabecera y pie.
+* `GCP_USERNAME`: Usuario SSH configurado en la VM (zodd).
+
+---
+
+## 3. Transferencia de Código (Local -> GCP VM)
 Desde la raíz de tu proyecto en la máquina local (`zodd@nootbster`), transfiere la carpeta del módulo cloud a la VM:
 
 ```bash
@@ -55,7 +89,7 @@ gcloud compute scp --recurse src/capa_cloud zodd@siemens-cloud-ai:~/cloud-api --
 
 ---
 
-## 3. Preparación del Entorno Docker en la VM   
+## 4. Preparación del Entorno Docker en la VM   
 Conéctate vía SSH a la instancia de GCP:
 
 ```bash
@@ -79,7 +113,7 @@ sudo ln -s $(which docker-compose) /usr/local/lib/docker/cli-plugins/docker-comp
 
 ---
 
-## 4. Estructura de Archivos en `~/cloud-api`
+## 5. Estructura de Archivos en `~/cloud-api`
 Asegúrate de que el directorio del proyecto en la VM (`~/cloud-api`) contenga los siguientes archivos:
 
 * `app2.py`: API REST Flask y modelo de regresión logística.
@@ -102,7 +136,7 @@ services:
 
 ---
 
-## 5. Despliegue y Operación de la API Cloud
+## 6. Despliegue y Operación de la API Cloud
 Compilar y levantar el servicio
 
 ```bash
@@ -129,7 +163,7 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-## 6. Verificación de Inferencia y Túnel SSH
+## 7. Verificación de Inferencia y Túnel SSH
 Existen dos modalidades para validar la API de IA mediante cURL:
 
 ### Opción A: Prueba remota directa (Vía IP Pública)
@@ -164,7 +198,7 @@ Respuesta esperada:
 
 ---
 
-## 7. Sincronización con la Capa Fog (Local)
+## 8. Sincronización con la Capa Fog (Local)
 Para conectar tu nodo Fog local con la VM en GCP, actualiza la dirección IP pública externa de GCP en el archivo `src/docker-compose.yml` de tu máquina local:
 
 ```yaml
