@@ -10,7 +10,8 @@ Servidor de inferencia para detección de anomalías en vibración y temperatura
 - [3. Preparación del Entorno Docker en la VM](#3-preparación-del-entorno-docker-en-la-vm)
 - [4. Estructura de Archivos en ~/cloud-api](#4-estructura-de-archivos-en-cloud-api)
 - [5. Despliegue y Operación de la API Cloud](#5-despliegue-y-operación-de-la-api-cloud)
-- [6. Sincronización con la Capa Fog (Local)](#6-sincronización-con-la-capa-fog-local)
+- [6. Verificación de Inferencia y Túnel SSH](#6-verificación-de-inferencia-y-túnel-ssh)
+- [7. Sincronización con la Capa Fog (Local)](#7-sincronización-con-la-capa-fog-local)
 
 ---
 
@@ -128,7 +129,42 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-## 6. Sincronización con la Capa Fog (Local)
+## 6. Verificación de Inferencia y Túnel SSH
+Existen dos modalidades para validar la API de IA mediante cURL:
+
+### Opción A: Prueba remota directa (Vía IP Pública)
+
+```bash
+curl -X POST http://<IP_EXTERNA_GCP>:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"vibration": 5.2, "temperature": 85.0}'
+```
+
+### Opción B: Prueba en entorno local mediante Túnel SSH (Port Forwarding)
+Si deseas testear la API desde tu máquina de desarrollo apuntando directamente a `localhost:8000`:
+
+```bash
+# 1. Crear el túnel SSH con redirección del puerto 8000:
+ssh -L 8000:localhost:8000 zodd@<IP_EXTERNA_GCP>
+
+# O usando gcloud:
+gcloud compute ssh zodd@siemens-cloud-ai --zone=europe-southwest1-a -- -L 8000:localhost:8000
+
+# 2. Ejecutar la petición desde otra pestaña de la terminal local:
+curl -X POST http://localhost:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"vibration": 5.2, "temperature": 85.0}'
+```
+
+Respuesta esperada:
+
+```json
+{"anomaly":true,"recommendation":"STOP_LINE","status":"success"}
+```
+
+---
+
+## 7. Sincronización con la Capa Fog (Local)
 Para conectar tu nodo Fog local con la VM en GCP, actualiza la dirección IP pública externa de GCP en el archivo `src/docker-compose.yml` de tu máquina local:
 
 ```yaml
