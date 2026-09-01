@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 # Configuración mediante variables de entorno o estáticas
 MQTT_BROKER = os.getenv("MQTT_HOST", "localhost")
 MQTT_TOPIC = "factory/telemetry"
-CLOUD_API_URL = "http://34.175.14.105:8000/predict"
+CLOUD_API_URL = os.getenv("CLOUD_API_URL", "http://34.175.205.123:8000/predict")
 
 def on_connect(client, userdata, flags, rc):
     print(f"Conectado al Broker MQTT local con código: {rc}")
