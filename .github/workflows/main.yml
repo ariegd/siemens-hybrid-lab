@@ -58,7 +58,4 @@ jobs:
           docker compose pull
           docker compose up -d --remove-orphans
           echo "Despliegue en GCP completado con éxito."
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/fog-processor:${{ github.sha }}
-          ${{ github.event.release.tag_name && format('{0}/fog-processor:{1}', secrets.DOCKERHUB_USERNAME, github.event.release.tag_name) || '' }}
+
