@@ -18,7 +18,7 @@ services:
       - mqtt-broker
     environment:
       - MQTT_HOST=mqtt-broker
-      - CLOUD_API_URL=http://34.175.14.105:8000/predict
+      - CLOUD_API_URL=http://34.175.205.123:8000/predict
     networks:
       - factory-network
 
